@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráfico de Função Linear</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #1e1e1e;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            background-color: #2b2b2b;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        .form-container {
+            flex: 1;
+            max-width: 350px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-container input {
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            background-color: #333;
+            color: white;
+        }
+
+        .form-container button {
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        .form-container p {
+            margin: 0;
+            font-size: 16px;
+        }
+
+        canvas {
+            flex: 1;
+            max-width: 600px;
+            background-color: white;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <label for="coefA">Coeficiente angular (a):</label>
+            <input type="number" id="coefA" placeholder="Digite o valor de a" />
+            
+            <label for="coefB">Coeficiente linear (b):</label>
+            <input type="number" id="coefB" placeholder="Digite o valor de b" />
+
+            <button onclick="calcularEPlotar()">Calcular e Mostrar Gráfico</button>
+
+            <p id="resultado">Função: y = </p>
+            <p id="tipoFuncao">Tipo da função: </p>
+            <p id="raizFuncao">Raiz da função: </p>
+        </div>
+        <canvas id="grafico"></canvas>
+    </div>
+
+    <script>
+        let grafico;
+
+        function calcularEPlotar() {
+            const coefA = parseFloat(document.getElementById("coefA").value);
+            const coefB = parseFloat(document.getElementById("coefB").value);
+
+            if (isNaN(coefA) || isNaN(coefB)) {
+                alert("Insira valores válidos.");
+                return;
+            }
+
+            // Determina o tipo da função
+            const tipoFuncao = coefA > 0 ? "Crescente" : coefA < 0 ? "Decrescente" : "Constante";
+            document.getElementById("resultado").textContent = `Função: y = ${coefA}x + ${coefB}`;
+            document.getElementById("tipoFuncao").textContent = `Tipo da função: ${tipoFuncao}`;
+
+            // Calcula a raiz da função, se aplicável
+            let raizTexto = "Não possui raiz (função constante)";
+            let raiz = null;
+            if (coefA !== 0) {
+                raiz = -coefB / coefA;
+                raizTexto = `Raiz: x = ${raiz.toFixed(2)}`;
+            }
+            document.getElementById("raizFuncao").textContent = raizTexto;
+
+            // Gera valores para o gráfico
+            const xValues = [];
+            const yValues = [];
+            for (let x = -10; x <= 10; x++) {
+                xValues.push(x);
+                yValues.push(coefA * x + coefB);
+            }
+
+            const pontosDestacados = [];
+            // Adiciona o ponto no eixo Y (interseção quando x = 0)
+            pontosDestacados.push({ x: 0, y: coefB });
+
+            // Adiciona a raiz no eixo X, se existir
+            if (raiz !== null) {
+                pontosDestacados.push({ x: raiz, y: 0 });
+            }
+
+            // Renderiza o gráfico
+            const ctx = document.getElementById("grafico").getContext("2d");
+
+            // Destrói gráfico anterior, se existir
+            if (grafico) grafico.destroy();
+
+            grafico = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: "Pontos Destacados",
+                            data: pontosDestacados,
+                            backgroundColor: 'rgba(255, 0, 0, 0.5)',
+                            pointRadius: 10,
+                        },
+                        {
+                            label: "Linha da Função",
+                            data: xValues.map((x, i) => ({ x, y: yValues[i] })),
+                            borderColor: 'blue',
+                            borderWidth: 2,
+                            type: 'line',
+                            fill: false,
+                            showLine: true,
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: "Eixo X",
+                                color: 'black'
+                            },
+                            ticks: {
+                                color: 'black',
+                                stepSize: 1
+                            },
+                            grid: {
+                                color: (ctx) => (ctx.tick.value === 0 ? '#000' : '#ccc'),
+                                lineWidth: (ctx) => (ctx.tick.value === 0 ? 2 : 1)
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: "Eixo Y",
+                                color: 'black'
+                            },
+                            ticks: {
+                                color: 'black',
+                                stepSize: 10
+                            },
+                            grid: {
+                                color: (ctx) => (ctx.tick.value === 0 ? '#000' : '#ccc'),
+                                lineWidth: (ctx) => (ctx.tick.value === 0 ? 2 : 1)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
